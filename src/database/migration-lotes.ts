@@ -1,4 +1,4 @@
-import { initDB } from "."; // ou './index', se preferir
+import { initDB } from "."; 
 
 async function migrate() {
   const db = await initDB(); // inicializa o banco

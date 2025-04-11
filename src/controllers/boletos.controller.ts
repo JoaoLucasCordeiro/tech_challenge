@@ -1,4 +1,3 @@
-// src/controllers/boletos.controller.ts
 import { Request, Response } from "express";
 import path from "path";
 import fs from "fs";
@@ -16,7 +15,7 @@ export const handleCsvUpload = async (req: Request, res: Response) => {
 
   try {
     await importarCSV(filePath);
-    fs.unlinkSync(filePath); // apaga o arquivo após processar
+    fs.unlinkSync(filePath); 
     res.status(200).json({ message: "Boletos importados com sucesso." });
   } catch (error) {
     console.error(error);
@@ -33,7 +32,7 @@ export const handlePdfUpload = async (req: Request, res: Response) => {
 
   try {
     await importarPDF(file.path)
-    fs.unlinkSync(file.path); // opcional: apagar arquivo após processar
+    fs.unlinkSync(file.path);
     return res.status(200).json({ message: "Boletos via PDF importados com sucesso." });
   } catch (error) {
     console.error(error);
