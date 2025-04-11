@@ -18,9 +18,20 @@ export async function initDB() {
       cpf TEXT NOT NULL,
       valor REAL NOT NULL,
       vencimento TEXT NOT NULL,
-      pdf_path TEXT
-    )
+      pdf_path TEXT,
+      id_lote INTEGER,
+      ativo BOOLEAN DEFAULT 1,
+      criado_em TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+  
+    CREATE TABLE IF NOT EXISTS lotes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nome TEXT NOT NULL,
+      ativo BOOLEAN DEFAULT 1,
+      criado_em TEXT DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+  
 
   return dbInstance;
 }
