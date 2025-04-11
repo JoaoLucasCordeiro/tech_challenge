@@ -1,12 +1,29 @@
-// src/routes/boletos.routes.ts
 import { Router } from "express";
 import multer from "multer";
-import { handleCsvUpload } from "../controllers/boletos.controller";
+import path from "path";
+import { handleCsvUpload, handleGerarRelatorioPorLote, handlePdfUpload } from "../controllers/boletos.controller";
 
-const boletosRoutes = Router();
+const router = Router();
 
-const upload = multer({ dest: "src/uploads/csv" });
+// Configura o multer para uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dest = file.mimetype === "text/csv"
+      ? path.resolve(__dirname, "..", "uploads", "csv")
+      : path.resolve(__dirname, "..", "uploads", "pdf");
+    cb(null, dest);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
 
-boletosRoutes.post("/upload", upload.single("file"), handleCsvUpload);
+const upload = multer({ storage });
 
-export default boletosRoutes;
+// boletos.routes.ts
+router.post("/upload/csv", upload.single("file"), handleCsvUpload);
+router.post("/upload/pdf", upload.single("file"), handlePdfUpload);
+router.get("/lotes/:loteId/relatorio", handleGerarRelatorioPorLote);
+
+
+export default router;
