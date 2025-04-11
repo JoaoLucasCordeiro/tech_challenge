@@ -1,9 +1,10 @@
+// src/controllers/boletos.controller.ts
 import { Request, Response } from "express";
-import csv from "csv-parser";
-import fs from "fs";
 import path from "path";
-import { parseCsvLine } from "../utils/csvParser";
-import { saveBoleto } from "../services/boletos.service";
+import fs from "fs";
+import { importarCSV } from "../services/boletos.service";
+import { importarPDF } from "../services/boletos.service";
+import { gerarRelatorioPorLote } from "../services/relatorios.service";
 
 
 export const handleCsvUpload = async (req: Request, res: Response) => {
@@ -11,22 +12,46 @@ export const handleCsvUpload = async (req: Request, res: Response) => {
 
   if (!file) return res.status(400).json({ message: "CSV não enviado." });
 
-  const results: any[] = [];
+  const filePath = path.resolve(file.path);
 
-  fs.createReadStream(file.path)
-    .pipe(csv())
-    .on("data", (data) => results.push(data))
-    .on("end", async () => {
-      try {
-        for (const row of results) {
-          const parsed = parseCsvLine(row);
-          await saveBoleto(parsed);
-        }
-
-        res.status(200).json({ message: "Boletos processados com sucesso." });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Erro ao processar boletos." });
-      }
-    });
+  try {
+    await importarCSV(filePath);
+    fs.unlinkSync(filePath); // apaga o arquivo após processar
+    res.status(200).json({ message: "Boletos importados com sucesso." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erro ao importar boletos." });
+  }
 };
+
+export const handlePdfUpload = async (req: Request, res: Response) => {
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ message: "Arquivo PDF não enviado." });
+  }
+
+  try {
+    await importarPDF(file.path)
+    fs.unlinkSync(file.path); // opcional: apagar arquivo após processar
+    return res.status(200).json({ message: "Boletos via PDF importados com sucesso." });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erro ao importar boletos via PDF." });
+  }
+};
+
+export async function handleGerarRelatorioPorLote(req: Request, res: Response) {
+  const loteId = Number(req.params.loteId);
+  if (isNaN(loteId)) {
+    return res.status(400).json({ message: "ID do lote inválido" });
+  }
+
+  try {
+    const filePath = await gerarRelatorioPorLote(loteId);
+    return res.download(filePath);
+  } catch (err: any) {
+    console.error(err);
+    return res.status(500).json({ message: "Erro ao gerar relatório" });
+  }
+}
